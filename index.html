@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Object-Oriented Physics Engine</title>
+  <style>
+    .falling-object {
+      position: absolute;
+    }
+  </style>
+</head>
+<body>
+
+<script>
+  class FallingObject {
+    constructor({ id, mass = 1, elasticity = 0.8, initialPositionY = 0, initialPositionX = 0, color = "red" }) {
+      this.id = id;
+      this.mass = mass;
+      this.elasticity = elasticity;
+      this.color = color;
+      this.positionY = initialPositionY;
+      this.positionX = initialPositionX;
+      this.velocityY = 0;  // Initialize velocity based on mass
+      this.screenHeight = window.innerHeight;
+
+      // Create the DOM element for the object
+      this.element = document.createElement('div');
+      this.element.classList.add('falling-object');
+      this.element.style.background = this.color;
+      this.element.style.width = `${mass * 10}px`; // Adjust size based on mass (just for demonstration)
+      this.element.style.height = `${mass * 10}px`;
+      this.element.style.left = `${initialPositionX}px`;
+      document.body.appendChild(this.element);
+
+      // Initial styling
+      this.element.style.transform = `translateY(${this.positionY}px)`;
+
+      // Start the animation loop
+      this.fall();
+    }
+
+    checkCollision(otherObject) {
+      const rect1 = this.element.getBoundingClientRect();
+      const rect2 = otherObject.element.getBoundingClientRect();
+
+      return (
+        rect1.left < rect2.right &&
+        rect1.right > rect2.left &&
+        rect1.top < rect2.bottom &&
+        rect1.bottom > rect2.top
+      );
+    }
+
+    handleCollision(otherObject) {
+      // Swap velocities for a simple momentum exchange
+      const tempVelocityY = this.velocityY;
+      this.velocityY = otherObject.velocityY;
+      otherObject.velocityY = tempVelocityY;
+
+      // Apply elasticity to reduce energy loss
+      this.velocityY *= this.elasticity;
+      otherObject.velocityY *= otherObject.elasticity;
+    }
+
+    fall() {
+      const gravity = 0.2;  // Adjust as needed
+      const airResistance = 0.02;  // Adjust as needed
+      const timeStep = 16;  // Fixed time step in milliseconds
+
+      // Update velocity based on gravity and air resistance
+      this.velocityY += gravity - airResistance * this.velocityY;
+
+      // Update position based on velocity
+      this.positionY += this.velocityY;
+
+      // Check if the object has reached the bottom of the screen
+      if (this.positionY >= this.screenHeight - this.mass * 10) {
+        this.positionY = this.screenHeight - this.mass * 10;  // Adjust to the height of your object
+        this.velocityY = -this.velocityY * this.elasticity;  // Reverse and apply elasticity
+      }
+
+      // Check for collision with other objects
+      for (const otherObject of fallingObjects) {
+        if (this.id !== otherObject.id && this.checkCollision(otherObject)) {
+          this.handleCollision(otherObject);
+        }
+      }
+
+      // Apply position to the DOM element
+      this.element.style.transform = `translateY(${this.positionY}px)`;
+
+      // Request the next animation frame
+      requestAnimationFrame(() => this.fall());
+    }
+  }
+
+  // Create an array to hold instances of the FallingObject class
+  const fallingObjects = [];
+
+  // Create instances of the FallingObject class with specified properties
+  fallingObjects.push(new FallingObject({
+    id: 1,
+    mass: 2,  // Adjust mass as needed
+    elasticity: 1.05,
+    initialPositionY: 0
+  }));
+
+  fallingObjects.push(new FallingObject({
+    id: 2,
+    mass: 4,  // Adjust mass as needed
+    elasticity: 0.9,
+    initialPositionY: 60,
+    color: "aqua"
+  }));
+
+  fallingObjects.push(new FallingObject({
+    id: 3,
+    mass: 3,  // Adjust mass as needed
+    elasticity: 1.09,
+    initialPositionY: 120,
+    initialPositionX: 120,
+    color: "green"
+  }));
+
+  fallingObjects.push(new FallingObject({
+    id: 5,
+    mass: 4,  // Adjust mass as needed
+    elasticity: 0.9,
+    initialPositionX: 240,
+    initialPositionY: 60,
+    color: "aqua"
+  }));
+
+  // Add more falling objects as needed
+
+</script>
+
+</body>
+</html>
